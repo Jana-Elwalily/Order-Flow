@@ -180,7 +180,7 @@ function viewCart($customer_id) {
 function updateCartQuantity($customer_id, $product_id, $quantity) {
     global $conn;
     if ($quantity <= 0){
-         return removeFromCart($customer_id, $product);
+         return removeFromCart($customer_id, $product_id);
     }
     $stmt = $conn->prepare("SELECT stock_quantity FROM Product WHERE product_id = ?");
     $stmt->bind_param("s", $product_id);
@@ -209,7 +209,7 @@ function clearCart($customer_id) {
     global $conn;
     $cart_id = getOrCreateCart($customer_id);
     $stmt = $conn->prepare("DELETE FROM Cart_Item WHERE cart_id = ?");
-    $stmt->bind_param("i", $cart_id);S
+    $stmt->bind_param("i", $cart_id);
     $stmt->execute();
     return ['success' => true];
 }
