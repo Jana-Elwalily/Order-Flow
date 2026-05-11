@@ -1,9 +1,9 @@
 <?php
 header('Content-Type: application/json');
 require_once 'order_fn.php';
-$isbn = $_GET['isbn'] ?? '';
-if (!$isbn) {
-    echo json_encode(['success' => false, 'message' => 'ISBN is required']);
+$product_id = $_GET['product_id'] ?? '';
+if (!$product_id) {
+    echo json_encode(['success' => false, 'message' => 'Product ID is required']);
     exit;
 }
 

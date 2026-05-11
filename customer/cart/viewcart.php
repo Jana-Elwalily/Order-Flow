@@ -1,14 +1,12 @@
 <?php
-require_once '../order_fn.php';
 header('Content-Type: application/json');
-#session_start();
+session_start();
+require_once '../functions.php';
 
-$customer_id = $_SESSION['customer_id'] ?? null;
-if (!$customer_id) {
+if (!isset($_SESSION['customer_id'])) {
     echo json_encode(['success' => false, 'message' => 'Not logged in']);
     exit;
 }
 
-echo json_encode(viewCart($customer_id));
-
+echo json_encode(viewCart($_SESSION['customer_id']));
 ?>
