@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Orders – OrderFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .order-card {
+            background: rgba(34, 34, 43, 0.65);
+            backdrop-filter: blur(14px);
+            border-radius: 16px;
+            padding: 0;
+            border: 1px solid rgba(106, 90, 249, 0.2);
+            box-shadow: 0 0 25px rgba(0,0,0,0.3);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .order-header {
+            background: rgba(106, 90, 249, 0.12);
+            border-bottom: 1px solid rgba(106, 90, 249, 0.2);
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .order-header-left { display: flex; flex-direction: column; gap: 4px; }
+
+        .order-id {
+            font-size: 1rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #ff80ab, #6ecbff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .order-date { color: #9d9db5; font-size: 0.85rem; }
+
+        .order-total {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #80ffb4;
+            white-space: nowrap;
+        }
+
+        .order-items { padding: 0 24px; }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .order-item:last-child { border-bottom: none; }
+
+        .item-info { display: flex; flex-direction: column; gap: 3px; }
+
+        .item-name {
+            color: #ffb6cf;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .item-meta { color: #9d9db5; font-size: 0.82rem; }
+
+        .item-pricing { text-align: right; }
+
+        .item-qty { color: #9d9db5; font-size: 0.82rem; }
+
+        .item-subtotal { color: #cfcfcf; font-weight: 600; font-size: 0.95rem; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9d9db5;
+        }
+
+        .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; }
+
+        .badge-count {
+            display: inline-block;
+            background: rgba(106, 90, 249, 0.2);
+            border: 1px solid rgba(106, 90, 249, 0.3);
+            color: #b0a8ff;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .summary-bar {
+            background: rgba(34, 34, 43, 0.65);
+            border: 1px solid rgba(106, 90, 249, 0.2);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 28px;
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .summary-stat { display: flex; flex-direction: column; gap: 2px; }
+        .summary-label { color: #9d9db5; font-size: 0.8rem; }
+        .summary-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #ff80ab, #6ecbff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #ff80ab;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 60px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <span class="brand-logo">OrderFlow</span>
+        <div>
+            <a href="dashboard.html" class="nav-link" style="display:inline-block;margin:0 10px;">Home</a>
+            <a href="customer_search_for_product.html" class="nav-link" style="display:inline-block;margin:0 10px;">Search</a>
+            <a href="customer_checkout.html" class="nav-link" style="display:inline-block;margin:0 10px;">Cart</a>
+            <a href="customer_view_orders.html" class="nav-link" style="display:inline-block;margin:0 10px;">Orders</a>
+            <a href="customer_edit_info.html" class="nav-link" style="display:inline-block;margin:0 10px;">Profile</a>
+            <a href="#" class="nav-link" style="display:inline-block;margin:0 10px;" onclick="logout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="margin-top:50px;margin-bottom:60px;max-width:860px;">
+
+    <!-- Header -->
+    <div class="themed-card text-center" style="width:100%;max-width:none;margin-bottom:28px;">
+        <h2 style="color:#ff80ab;margin-bottom:6px;">
+            My Past Orders
+            <span class="badge-count" id="order-count" style="display:none;"></span>
+        </h2>
+        <p style="color:#9d9db5;margin:0;">Your purchases so far</p>
+    </div>
+
+    <!-- Summary bar -->
+    <div class="summary-bar" id="summary-bar" style="display:none;">
+        <div class="summary-stat">
+            <span class="summary-label">Total orders</span>
+            <span class="summary-value" id="stat-orders">—</span>
+        </div>
+        <div class="summary-stat">
+            <span class="summary-label">Items purchased</span>
+            <span class="summary-value" id="stat-items">—</span>
+        </div>
+        <div class="summary-stat">
+            <span class="summary-label">Total spent</span>
+            <span class="summary-value" id="stat-spent">—</span>
+        </div>
+        <div class="summary-stat">
+            <span class="summary-label">Most recent</span>
+            <span class="summary-value" id="stat-recent">—</span>
+        </div>
+    </div>
+
+    <!-- Orders list -->
+    <div id="orders-list">
+        <div class="spinner"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:32px;">
+        <a href="customer_checkout.html" class="btn btn" style="margin-right:10px;">Go to Cart</a>
+        <a href="dashboard.html" class="btn btn-outline">Back to Dashboard</a>
+    </div>
+
+</div>
+
+<script>
+async function loadOrders() {
+    const list = document.getElementById('orders-list');
+
+    try {
+        const res  = await fetch('../customer/cart/order_history.php', { credentials: 'include' });
+        const data = await res.json();
+
+        if (!data.success) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon"></div>
+                    <p style="color:#ff9999;">${data.message || 'Could not load orders.'}</p>
+                </div>`;
+            return;
+        }
+
+        if (!data.orders || data.orders.length === 0) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon"></div>
+                    <h5 style="color:#cfcfcf;margin-bottom:8px;">No orders yet</h5>
+                    <p style="margin-bottom:20px;">Looks like you haven't placed any orders yet.</p>
+                    <a href="dashboard.html" class="btn btn">Start Shopping</a>
+                </div>`;
+            return;
+        }
+
+        /* ---- summary stats ---- */
+        const totalSpent = data.orders.reduce((s, o) => s + parseFloat(o.total_amount), 0);
+        const totalItems = data.orders.reduce((s, o) => s + o.items.length, 0);
+        const mostRecent = new Date(data.orders[0].order_date).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'short', year: 'numeric'
+        });
+
+        document.getElementById('stat-orders').textContent = data.orders.length;
+        document.getElementById('stat-items').textContent  = totalItems;
+        document.getElementById('stat-spent').textContent  = '$' + totalSpent.toFixed(2);
+        document.getElementById('stat-recent').textContent = mostRecent;
+        document.getElementById('summary-bar').style.display = 'flex';
+
+        document.getElementById('order-count').textContent    = data.orders.length;
+        document.getElementById('order-count').style.display  = 'inline-block';
+
+        /* ---- render orders (newest first, already sorted by DB) ---- */
+        list.innerHTML = '';
+        data.orders.forEach(order => {
+            const date = new Date(order.order_date).toLocaleString('en-GB', {
+                day: 'numeric', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+
+            let itemsHtml = '';
+            order.items.forEach(item => {
+                itemsHtml += `
+                    <div class="order-item">
+                        <div class="item-info">
+                            <span class="item-name">${item.product_name}</span>
+                            <span class="item-meta">Seller: ${item.seller_name || 'N/A'}</span>
+                            <span class="item-meta">Unit price: $${parseFloat(item.price_at_purchase).toFixed(2)}</span>
+                        </div>
+                        <div class="item-pricing">
+                            <div class="item-qty">Qty: ${item.quantity}</div>
+                            <div class="item-subtotal">$${parseFloat(item.item_total).toFixed(2)}</div>
+                        </div>
+                    </div>`;
+            });
+
+            const card = document.createElement('div');
+            card.className = 'order-card';
+            card.innerHTML = `
+                <div class="order-header">
+                    <div class="order-header-left">
+                        <span class="order-id">Order #${order.order_id}</span>
+                        <span class="order-date">${date}&nbsp;&nbsp;&nbsp;&nbsp;${order.items.length} item${order.items.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <span class="order-total">$${parseFloat(order.total_amount).toFixed(2)}</span>
+                </div>
+                <div class="order-items">${itemsHtml}</div>
+            `;
+            list.appendChild(card);
+        });
+
+    } catch (err) {
+        console.error(err);
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon"></div>
+                <p style="color:#ff9999;">Network error — couldn't reach the server.</p>
+            </div>`;
+    }
+}
+
+async function logout() {
+    await fetch('../customer/logout.php', { credentials: 'include' });
+    window.location.href = 'login.html';
+}
+
+loadOrders();
+</script>
+
+</body>
+</html>

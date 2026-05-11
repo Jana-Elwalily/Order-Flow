@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Profile – OrderFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <span class="brand-logo">OrderFlow</span>
+        <div>
+            <a href="dashboard.html" class="nav-link" style="display:inline-block;margin:0 10px;">Home</a>
+            <a href="customer_search_for_product.html" class="nav-link" style="display:inline-block;margin:0 10px;">Search</a>
+            <a href="customer_checkout.html" class="nav-link" style="display:inline-block;margin:0 10px;">Cart</a>
+            <a href="customer_view_orders.html" class="nav-link" style="display:inline-block;margin:0 10px;">Orders</a>
+            <a href="customer_edit_info.html" class="nav-link" style="display:inline-block;margin:0 10px;">Profile</a>
+            <a href="#" class="nav-link" style="display:inline-block;margin:0 10px;" onclick="logout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="margin-top:50px;margin-bottom:50px;">
+
+    <div class="themed-card text-center" style="width:100%;max-width:none;margin-bottom:30px;">
+        <h2 style="color:#ff80ab;">Edit Your Information</h2>
+        <p style="color:#cfcfcf;">Update your profile details and password</p>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Profile -->
+        <div class="col-md-6">
+            <div class="themed-card" style="width:100%;max-width:none;">
+                <h4 style="color:#ff80ab;margin-bottom:20px;">Profile Details</h4>
+
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">Username</label>
+                    <input id="p_username" class="form-control" placeholder="Username">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">First Name</label>
+                    <input id="p_first_name" class="form-control" placeholder="First name">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">Last Name</label>
+                    <input id="p_last_name" class="form-control" placeholder="Last name">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">Email</label>
+                    <input id="p_email" class="form-control" placeholder="Email">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">Phone</label>
+                    <input id="p_phone" class="form-control" placeholder="Phone">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">Shipping Address</label>
+                    <input id="p_shipping_address" class="form-control" placeholder="Shipping address">
+                </div>
+
+                <button class="btn btn w-100" onclick="updateProfile()">Update Profile</button>
+                <p id="profile-msg" style="text-align:center;margin-top:12px;"></p>
+            </div>
+        </div>
+
+        <!-- Password -->
+        <div class="col-md-6">
+            <div class="themed-card" style="width:100%;max-width:none;">
+                <h4 style="color:#ff80ab;margin-bottom:20px;">Change Password</h4>
+
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">Current Password</label>
+                    <input type="password" id="old_password" class="form-control" placeholder="Current password">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">New Password</label>
+                    <input type="password" id="new_password" class="form-control" placeholder="New password">
+                </div>
+                <div class="mb-3">
+                    <label style="color:#cfcfcf;">Confirm New Password</label>
+                    <input type="password" id="confirm_password" class="form-control" placeholder="Confirm new password">
+                </div>
+
+                <button class="btn btn w-100" onclick="changePassword()">Change Password</button>
+                <p id="pass-msg" style="text-align:center;margin-top:12px;"></p>
+            </div>
+        </div>
+
+    </div>
+
+    <div style="text-align:center;margin-top:30px;">
+        <a href="dashboard.html" class="btn btn-outline">Back to Dashboard</a>
+    </div>
+
+</div>
+
+<script>
+/* Load current profile into fields */
+async function loadProfile() {
+    try {
+        const res  = await fetch('../customer/get_profile.php', { credentials: 'include' });
+        const data = await res.json();
+        if (data.success && data.profile) {
+            const p = data.profile;
+            document.getElementById('p_username').value         = p.username         || '';
+            document.getElementById('p_first_name').value       = p.first_name       || '';
+            document.getElementById('p_last_name').value        = p.last_name        || '';
+            document.getElementById('p_email').value            = p.email            || '';
+            document.getElementById('p_phone').value            = p.phone            || '';
+            document.getElementById('p_shipping_address').value = p.shipping_address || '';
+        }
+    } catch (err) { console.error('Profile load error:', err); }
+}
+
+async function updateProfile() {
+    const msg = document.getElementById('profile-msg');
+    const fd  = new FormData();
+    fd.append('username',         document.getElementById('p_username').value.trim());
+    fd.append('first_name',       document.getElementById('p_first_name').value.trim());
+    fd.append('last_name',        document.getElementById('p_last_name').value.trim());
+    fd.append('email',            document.getElementById('p_email').value.trim());
+    fd.append('phone',            document.getElementById('p_phone').value.trim());
+    fd.append('shipping_address', document.getElementById('p_shipping_address').value.trim());
+
+    try {
+        const res  = await fetch('../customer/update_profile.php', {
+            method: 'POST', body: fd, credentials: 'include'
+        });
+        const data = await res.json();
+        msg.style.color = data.success ? '#80ffb4' : '#ff9999';
+        msg.innerText   = data.message || (data.success ? 'Profile updated successfully!' : 'Something went wrong.');
+    } catch (err) {
+        msg.style.color = '#ff9999';
+        msg.innerText   = 'Network error.';
+    }
+}
+
+async function changePassword() {
+    const msg         = document.getElementById('pass-msg');
+    const old_password    = document.getElementById('old_password').value.trim();
+    const new_password    = document.getElementById('new_password').value.trim();
+    const confirm_password = document.getElementById('confirm_password').value.trim();
+
+    if (!old_password || !new_password || !confirm_password) {
+        msg.style.color = '#ff9999';
+        msg.innerText   = 'All password fields are required.';
+        return;
+    }
+    if (new_password !== confirm_password) {
+        msg.style.color = '#ff9999';
+        msg.innerText   = 'New passwords do not match.';
+        return;
+    }
+
+    const fd = new FormData();
+    fd.append('old_password', old_password);
+    fd.append('new_password', new_password);
+
+    try {
+        const res  = await fetch('../customer/change_password.php', {
+            method: 'POST', body: fd, credentials: 'include'
+        });
+        const data = await res.json();
+        msg.style.color = data.success ? '#80ffb4' : '#ff9999';
+        msg.innerText   = data.message || (data.success ? 'Password changed successfully!' : 'Something went wrong.');
+
+        if (data.success) {
+            document.getElementById('old_password').value     = '';
+            document.getElementById('new_password').value     = '';
+            document.getElementById('confirm_password').value = '';
+        }
+    } catch (err) {
+        msg.style.color = '#ff9999';
+        msg.innerText   = 'Network error.';
+    }
+}
+
+async function logout() {
+    await fetch('../customer/logout.php', { credentials: 'include' });
+    window.location.href = 'login.html';
+}
+
+loadProfile();
+</script>
+
+</body>
+</html>

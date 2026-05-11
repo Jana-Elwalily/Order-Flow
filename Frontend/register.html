@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register – OrderFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <span class="brand-logo">OrderFlow</span>
+        <div>
+            <a href="landing.html" class="nav-link" style="display:inline-block;margin:0 10px;">Home</a>
+            <a href="login.html"   class="nav-link" style="display:inline-block;margin:0 10px;">Login</a>
+            <a href="register.html" class="nav-link" style="display:inline-block;margin:0 10px;">Register</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container dashboard-container">
+
+    <!-- Hero -->
+    <div class="themed-card text-center mb-4">
+        <h1 class="hero-title">OrderFlow</h1>
+        <p class="hero-subtitle">Your one stop shop.</p>
+    </div>
+
+    <!-- Registration form -->
+    <div class="themed-card">
+        <h4 class="mb-4">Create an Account</h4>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label style="color:#cfcfcf;">First Name</label>
+                <input type="text" id="first_name" class="form-control" placeholder="First name" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label style="color:#cfcfcf;">Last Name</label>
+                <input type="text" id="last_name" class="form-control" placeholder="Last name" required>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label style="color:#cfcfcf;">Username</label>
+            <input type="text" id="username" class="form-control" placeholder="Username" required>
+        </div>
+
+        <div class="mb-3">
+            <label style="color:#cfcfcf;">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="Email" required>
+        </div>
+
+        <div class="mb-3">
+            <label style="color:#cfcfcf;">Phone Number</label>
+            <input type="text" id="phone" class="form-control" placeholder="Phone">
+        </div>
+
+        <div class="mb-3">
+            <label style="color:#cfcfcf;">Shipping Address</label>
+            <textarea id="shipping_address" class="form-control" rows="3" placeholder="Shipping address"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label style="color:#cfcfcf;">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="Password" required>
+        </div>
+
+        <div class="mb-4">
+            <label style="color:#cfcfcf;">Confirm Password</label>
+            <input type="password" id="confirm_password" class="form-control" placeholder="Confirm password" required>
+        </div>
+
+        <p id="reg-message" style="text-align:center;margin-bottom:12px;display:none;"></p>
+
+        <button class="btn btn w-100" onclick="register()">Create Account</button>
+
+        <p style="text-align:center;margin-top:16px;color:#9d9db5;">
+            Already have an account? <a href="login.html" style="color:#ff80ab;">Log in</a>
+        </p>
+    </div>
+
+</div>
+
+<script>
+async function register() {
+    const msg = document.getElementById('reg-message');
+
+    const username         = document.getElementById('username').value.trim();
+    const password         = document.getElementById('password').value;
+    const confirm_password = document.getElementById('confirm_password').value;
+    const first_name       = document.getElementById('first_name').value.trim();
+    const last_name        = document.getElementById('last_name').value.trim();
+    const email            = document.getElementById('email').value.trim();
+    const phone            = document.getElementById('phone').value.trim();
+    const shipping_address = document.getElementById('shipping_address').value.trim();
+
+    // Client-side validation
+    if (!username || !password || !email) {
+        showMsg('Username, email and password are required.', false);
+        return;
+    }
+    if (password !== confirm_password) {
+        showMsg('Passwords do not match.', false);
+        return;
+    }
+    if (password.length < 6) {
+        showMsg('Password must be at least 6 characters.', false);
+        return;
+    }
+
+    const fd = new FormData();
+    fd.append('username',         username);
+    fd.append('password',         password);
+    fd.append('first_name',       first_name);
+    fd.append('last_name',        last_name);
+    fd.append('email',            email);
+    fd.append('phone',            phone);
+    fd.append('shipping_address', shipping_address);
+
+    try {
+        const res  = await fetch('../customer/register.php', {
+            method: 'POST',
+            body: fd
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showMsg('Account created! Redirecting to login...', true);
+            setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+        } else {
+            showMsg(data.message || 'Registration failed.', false);
+        }
+    } catch (err) {
+        console.error(err);
+        showMsg('Network error — please try again.', false);
+    }
+}
+
+function showMsg(text, success) {
+    const msg = document.getElementById('reg-message');
+    msg.style.display = 'block';
+    msg.style.color   = success ? '#80ffb4' : '#ff9999';
+    msg.textContent   = text;
+}
+</script>
+
+</body>
+</html>

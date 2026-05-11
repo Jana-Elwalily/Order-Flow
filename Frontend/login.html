@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login – OrderFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .login-form { display: none; }
+        .role-btn-wrapper { display:flex; gap:16px; justify-content:center; margin-bottom:20px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <span class="brand-logo">OrderFlow</span>
+        <div>
+            <a href="landing.html" class="nav-link" style="display:inline-block;margin:0 10px;">Home</a>
+            <a href="register.html" class="nav-link" style="display:inline-block;margin:0 10px;">Register</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="margin-top:80px;max-width:480px;">
+
+    <div class="themed-card text-center mb-4">
+        <h2>Welcome Back</h2>
+        <p style="color:#cfcfcf;">Sign in to OrderFlow</p>
+    </div>
+
+    <!-- Role selector -->
+    <div class="role-btn-wrapper">
+        <button class="btn btn" onclick="showForm('customer')">Customer Login</button>
+    </div>
+
+    <!-- Admin Login -->
+    <div class="themed-card login-form" id="admin-form">
+        <h4 style="color:#ff80ab;margin-bottom:20px;">Admin Login</h4>
+        <div class="mb-3">
+            <input type="text" id="a_username" class="form-control" placeholder="Username">
+        </div>
+        <div class="mb-3">
+            <input type="password" id="a_password" class="form-control" placeholder="Password">
+        </div>
+        <p id="admin-error" style="color:#ff9999;text-align:center;"></p>
+        <button class="btn btn w-100" onclick="adminLogin()">Login as Admin</button>
+    </div>
+
+    <!-- Customer Login -->
+    <div class="themed-card login-form" id="customer-form">
+        <h4 style="color:#ff80ab;margin-bottom:20px;">Customer Login</h4>
+        <div class="mb-3">
+            <input type="text" id="c_username" class="form-control" placeholder="Username">
+        </div>
+        <div class="mb-3">
+            <input type="password" id="c_password" class="form-control" placeholder="Password">
+        </div>
+        <p id="customer-error" style="color:#ff9999;text-align:center;"></p>
+        <button class="btn btn w-100" onclick="customerLogin()">Login</button>
+        <p style="color:#cfcfcf;text-align:center;margin-top:16px;">
+            No account? <a href="register.html" style="color:#ff80ab;">Sign up</a>
+        </p>
+    </div>
+
+</div>
+
+<script>
+function showForm(role) {
+    document.getElementById('admin-form').style.display    = role === 'admin'    ? 'block' : 'none';
+    document.getElementById('customer-form').style.display = role === 'customer' ? 'block' : 'none';
+}
+
+async function adminLogin() {
+    const fd = new FormData();
+    fd.append('username', document.getElementById('a_username').value.trim());
+    fd.append('password', document.getElementById('a_password').value.trim());
+
+    const res  = await fetch('../admin/process_files/process_login.php', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.success) {
+        window.location.href = 'adminrole.html';
+    } else {
+        document.getElementById('admin-error').innerText = data.message || data.error || 'Login failed.';
+    }
+}
+
+async function customerLogin() {
+    const fd = new FormData();
+    fd.append('username', document.getElementById('c_username').value.trim());
+    fd.append('password', document.getElementById('c_password').value.trim());
+
+    const res  = await fetch('../customer/login.php', { method: 'POST', body: fd, credentials: 'include' });
+    const data = await res.json();
+    if (data.success) {
+        window.location.href = 'dashboard.html';
+    } else {
+        document.getElementById('customer-error').innerText = data.message || 'Login failed.';
+    }
+}
+</script>
+<div class="bottom-ribbon">
+
+    <div class="ribbon-left">
+        <span>Admin? Login here</span>
+    </div>
+
+    <div class="ribbon-right">
+        <button onclick="showForm('admin')" class="ribbon-btn">
+            Admin Login
+        </button>
+    </div>
+
+</div>
+</body>
+
+</html>

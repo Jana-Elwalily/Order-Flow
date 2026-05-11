@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search – OrderFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <span class="brand-logo">OrderFlow</span>
+        <div>
+            <a href="dashboard.html" class="nav-link" style="display:inline-block;margin:0 10px;">Home</a>
+            <a href="customer_search_for_product.html" class="nav-link" style="display:inline-block;margin:0 10px;">Search</a>
+            <a href="customer_checkout.html" class="nav-link" style="display:inline-block;margin:0 10px;">Cart</a>
+            <a href="customer_view_orders.html" class="nav-link" style="display:inline-block;margin:0 10px;">Orders</a>
+            <a href="customer_edit_info.html" class="nav-link" style="display:inline-block;margin:0 10px;">Profile</a>
+            <a href="#" class="nav-link" style="display:inline-block;margin:0 10px;" onclick="logout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="margin-top:50px;">
+
+    <!-- Hero -->
+    <div class="themed-card text-center mb-4">
+        <h2>Product Search</h2>
+        <p style="color:#cfcfcf;">Find what you need, add it to your cart.</p>
+    </div>
+
+    <!-- Search Controls -->
+    <div class="themed-card mb-4">
+        <h4 class="mb-4">Search for a Product</h4>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <select id="search_type" class="form-control">
+                    <option value="product_name">Product Name</option>
+                    <option value="category">Category</option>
+                    <option value="seller">Seller</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <input id="search_value" class="form-control" placeholder="Enter search keyword..."
+                    onkeydown="if(event.key==='Enter') doSearch()">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn w-100" onclick="doSearch()">Search</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Quick-filters -->
+    <div class="themed-card mb-4">
+        <h4 class="mb-3">Browse by Category</h4>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-outline" onclick="filterByCategory('Beauty')">Beauty</button>
+            <button class="btn btn-outline" onclick="filterByCategory('Fashion')">Fashion</button>
+            <button class="btn btn-outline" onclick="filterByCategory('Electronics')">Electronics</button>
+            <button class="btn btn-outline" onclick="filterByCategory('Supermarket')">Supermarket</button>
+            <button class="btn btn-outline" onclick="filterByCategory('Home&Appliances')">Home &amp; Appliances</button>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="themed-card mb-5">
+        <h4 class="mb-4">Results</h4>
+        <div id="cart-msg" style="text-align:center;margin-bottom:10px;"></div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Product ID</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Seller</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Qty</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="results-body">
+                    <tr><td colspan="9" style="color:#cfcfcf;text-align:center;">Search for a product above.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+async function doSearch() {
+    const type  = document.getElementById('search_type').value;
+    const value = document.getElementById('search_value').value.trim();
+    if (!value) { alert('Please enter a search keyword.'); return; }
+    await runSearch(type, value);
+}
+
+async function filterByCategory(cat) {
+    document.getElementById('search_type').value  = 'category';
+    document.getElementById('search_value').value = cat;
+    await runSearch('category', cat);
+}
+
+async function runSearch(type, value) {
+    const tbody = document.getElementById('results-body');
+    tbody.innerHTML = '<tr><td colspan="9" style="color:#cfcfcf;text-align:center;">Searching...</td></tr>';
+
+    try {
+        const url  = `../customer/search.php?type=${encodeURIComponent(type)}&value=${encodeURIComponent(value)}`;
+        const res  = await fetch(url, { credentials: 'include' });
+        const data = await res.json();
+
+        if (!data.success) {
+            tbody.innerHTML = `<tr><td colspan="9" style="color:#ff9999;text-align:center;">${data.message}</td></tr>`;
+            return;
+        }
+        if (!data.products || data.products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="color:#cfcfcf;text-align:center;">No products found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.products.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="color:#cfcfcf;font-size:.85rem;">${p.product_id}</td>
+                <td style="color:#ffb6cf;font-weight:bold;">${p.product_name}</td>
+                <td style="color:#cfcfcf;font-size:.85rem;max-width:200px;">${p.description || '—'}</td>
+                <td style="color:#cfcfcf;">${p.category}</td>
+                <td style="color:#cfcfcf;">${p.seller_name || 'N/A'}</td>
+                <td style="color:#80ffb4;">$${parseFloat(p.price).toFixed(2)}</td>
+                <td style="color:${p.stock_quantity > 0 ? '#cfcfcf' : '#ff9999'};">${p.stock_quantity}</td>
+                <td><input type="number" min="1" max="${p.stock_quantity}" value="1"
+                    id="qty_${p.product_id}" style="width:60px;background:#2a2a35;border:1px solid #444;color:#fff;border-radius:6px;padding:4px;"></td>
+                <td>
+                    <button class="btn btn-sm"
+                        style="${p.stock_quantity === 0 ? 'opacity:.4;pointer-events:none;' : ''}"
+                        onclick="addToCart('${p.product_id}')">
+                        ${p.stock_quantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="9" style="color:#cfcfcf;text-align:center;">Network error.</td></tr>';
+    }
+}
+
+async function addToCart(productId) {
+    const qtyEl = document.getElementById(`qty_${productId}`);
+    const qty   = parseInt(qtyEl ? qtyEl.value : 1);
+    const msgEl = document.getElementById('cart-msg');
+
+    const fd = new FormData();
+    fd.append('product_id', productId);
+    fd.append('quantity', qty);
+
+    try {
+        const res  = await fetch('../customer/cart/addcart.php', {
+            method: 'POST', body: fd, credentials: 'include'
+        });
+        const data = await res.json();
+        msgEl.style.color   = data.success ? '#80ffb4' : '#ff9999';
+        msgEl.innerText     = data.success ? `Added to cart!` : (data.message || 'Error adding to cart.');
+        setTimeout(() => { msgEl.innerText = ''; }, 3000);
+    } catch (err) {
+        msgEl.style.color = '#ff9999';
+        msgEl.innerText   = 'Network error.';
+    }
+}
+
+async function logout() {
+    await fetch('../customer/logout.php', { credentials: 'include' });
+    window.location.href = 'login.html';
+}
+
+
+(function () {
+    const type  = sessionStorage.getItem('qs_type');
+    const value = sessionStorage.getItem('qs_value');
+    if (type && value) {
+        sessionStorage.removeItem('qs_type');
+        sessionStorage.removeItem('qs_value');
+        document.getElementById('search_type').value  = type;
+        document.getElementById('search_value').value = value;
+        runSearch(type, value);
+    }
+})();
+</script>
+
+</body>
+</html>

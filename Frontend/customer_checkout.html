@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Checkout – OrderFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container">
+        <span class="brand-logo">OrderFlow</span>
+        <div>
+            <a href="dashboard.html" class="nav-link" style="display:inline-block;margin:0 10px;">Home</a>
+            <a href="customer_search_for_product.html" class="nav-link" style="display:inline-block;margin:0 10px;">Search</a>
+            <a href="customer_checkout.html" class="nav-link" style="display:inline-block;margin:0 10px;">Cart</a>
+            <a href="customer_view_orders.html" class="nav-link" style="display:inline-block;margin:0 10px;">Orders</a>
+            <a href="customer_edit_info.html" class="nav-link" style="display:inline-block;margin:0 10px;">Profile</a>
+            <a href="#" class="nav-link" style="display:inline-block;margin:0 10px;" onclick="logout()">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container" style="margin-top:50px;">
+
+    <!-- Header -->
+    <div class="themed-card text-center" style="width:100%;max-width:none;margin-bottom:30px;">
+        <h2 style="color:#ff80ab;">Checkout</h2>
+        <p style="color:#cfcfcf;">Review your cart and complete your order</p>
+    </div>
+
+    <!-- Cart -->
+    <div class="themed-card" style="width:100%;max-width:none;margin-bottom:30px;">
+        <h4 style="color:#ff80ab;margin-bottom:20px;">My Cart</h4>
+        <button class="btn btn mb-3" onclick="viewCart()">Refresh Cart</button>
+        <div id="cart-container"><p style="color:#cfcfcf;">Loading cart...</p></div>
+        <div id="cart-total" style="text-align:right;margin-top:15px;color:#ffb6cf;font-size:1.2rem;"></div>
+    </div>
+
+    <!-- Payment -->
+    <div class="themed-card" style="width:100%;max-width:none;margin-bottom:30px;">
+        <h4 style="color:#ff80ab;margin-bottom:20px;">Payment</h4>
+
+        <div class="mb-3">
+            <input id="card_number" class="form-control" placeholder="Card Number (16 digits)" maxlength="19">
+        </div>
+        <div class="mb-3">
+            <input id="expiry_date" class="form-control" placeholder="Expiry Date (MM/YY)" maxlength="5">
+        </div>
+
+        <button onclick="checkout()" class="btn btn w-100">Place Order</button>
+
+        <div id="checkout_response" class="mt-3" style="color:#ffb6cf;text-align:center;"></div>
+
+        <a href="dashboard.html" class="btn btn-outline w-100 mt-3">Back to Dashboard</a>
+    </div>
+
+</div>
+
+<script>
+/* ---- cart rendering ---- */
+async function viewCart() {
+    const container = document.getElementById('cart-container');
+    const totalDiv  = document.getElementById('cart-total');
+    container.innerHTML = '<p style="color:#cfcfcf;">Loading cart...</p>';
+    totalDiv.innerHTML  = '';
+
+    try {
+        const res  = await fetch('../customer/cart/viewcart.php', { credentials: 'include' });
+        const data = await res.json();
+
+        if (!data.success) {
+            container.innerHTML = `<p style="color:#ff6b6b;">${data.message}</p>`;
+            return;
+        }
+        if (!data.items || data.items.length === 0) {
+            container.innerHTML = '<p style="color:#cfcfcf;">Your cart is empty.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        data.items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'order-card mb-3';
+            div.style.cssText = 'background:rgba(34,34,43,.65);border-radius:12px;padding:18px;border:1px solid rgba(106,90,249,.2);';
+            div.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+                    <div>
+                        <b style="color:#ffb6cf;">${item.product_name}</b><br>
+                        <span style="color:#cfcfcf;font-size:.9rem;">Category: ${item.category}</span><br>
+                        <span style="color:#cfcfcf;font-size:.9rem;">Seller: ${item.seller_name || 'N/A'}</span><br>
+                        <span style="color:#cfcfcf;font-size:.9rem;">Unit price: $${parseFloat(item.price).toFixed(2)}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="color:#cfcfcf;margin-bottom:8px;">
+                            Qty:
+                            <button class="btn btn-sm" style="padding:2px 8px;" onclick="changeQty('${item.product_id}', ${item.quantity - 1})"> - </button>
+                            <span style="margin:0 6px;">${item.quantity}</span>
+                            <button class="btn btn-sm" style="padding:2px 8px;" onclick="changeQty('${item.product_id}', ${item.quantity + 1})"> + </button>
+                        </div>
+                        <div style="color:#ff80ab;font-weight:bold;">$${parseFloat(item.item_total).toFixed(2)}</div>
+                        <button class="btn btn-sm mt-2"
+                            style="background:rgba(255,100,100,.2);border:1px solid rgba(255,100,100,.4);color:#ff9999;"
+                            onclick="removeItem('${item.product_id}')">Remove</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        totalDiv.innerHTML = `<b>Total: $${parseFloat(data.total).toFixed(2)}</b>`;
+
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<p style="color:#cfcfcf;">Error loading cart.</p>';
+    }
+}
+
+async function changeQty(productId, newQty) {
+    if (newQty <= 0) { removeItem(productId); return; }
+    const fd = new FormData();
+    fd.append('product_id', productId);
+    fd.append('quantity', newQty);
+    await fetch('../customer/cart/updatecart.php', { method: 'POST', body: fd, credentials: 'include' });
+    viewCart();
+}
+
+async function removeItem(productId) {
+    const fd = new FormData();
+    fd.append('product_id', productId);
+    await fetch('../customer/cart/removecart.php', { method: 'POST', body: fd, credentials: 'include' });
+    viewCart();
+}
+
+/* ---- checkout ---- */
+async function checkout() {
+    const card_number = document.getElementById('card_number').value.trim();
+    const expiry_date = document.getElementById('expiry_date').value.trim();
+    const responseDiv = document.getElementById('checkout_response');
+    responseDiv.innerText = '';
+
+    if (!card_number || !expiry_date) {
+        responseDiv.innerText = 'Please fill in all payment fields.';
+        return;
+    }
+
+    const fd = new FormData();
+    fd.append('card_number', card_number);
+    fd.append('expiry_date', expiry_date);
+
+    try {
+        const res  = await fetch('../customer/cart/checkout.php', {
+            method: 'POST',
+            body: fd,
+            credentials: 'include'
+        });
+        const data = await res.json();
+        responseDiv.style.color = data.success ? '#80ffb4' : '#ff9999';
+        responseDiv.innerText   = data.message || (data.success ? 'Order placed!' : 'Something went wrong.');
+
+        if (data.success) {
+            document.getElementById('card_number').value = '';
+            document.getElementById('expiry_date').value = '';
+            viewCart();
+        }
+    } catch (err) {
+        console.error(err);
+        responseDiv.innerText = 'Network error. Please try again.';
+    }
+}
+
+/* ---- logout ---- */
+async function logout() {
+    await fetch('../customer/logout.php', { credentials: 'include' });
+    window.location.href = 'login.html';
+}
+
+/* ---- auto-format card input ---- */
+document.getElementById('card_number').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').slice(0, 16);
+    this.value = v.replace(/(.{4})/g, '$1 ').trim();
+});
+document.getElementById('expiry_date').addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').slice(0, 4);
+    if (v.length >= 3) v = v.slice(0,2) + '/' + v.slice(2);
+    this.value = v;
+});
+
+viewCart();
+</script>
+
+</body>
+</html>
