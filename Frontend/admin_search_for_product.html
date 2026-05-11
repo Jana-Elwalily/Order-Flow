@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+  <head>
+    <title>OrderFlow - Search Products</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- NAVBAR -->
+    <nav class="app-navbar">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span class="brand-logo">OrderFlow Admin</span>
+      </div>
+    </nav>
+
+    <div class="container dashboard-container">
+      <!-- HEADER -->
+      <div class="themed-card text-center" style="margin-bottom: 30px">
+        <h2 style="color: #d91fae">Search Products</h2>
+        <p style="color: #cfcfcf">
+          Find products by ID, name, category, or seller ID
+        </p>
+      </div>
+
+      <!-- SEARCH BOX -->
+      <div class="themed-card" style="margin-bottom: 20px">
+        <div class="d-flex gap-2">
+          <select id="searchTypeSelect" class="form-control">
+            <option value="product_id">Product ID</option>
+            <option value="product_name">Product Name</option>
+            <option value="category">Category</option>
+            <option value="seller_id">Seller ID</option>
+          </select>
+
+          <input
+            type="text"
+            id="searchInput"
+            class="form-control"
+            placeholder="Enter keyword"
+          />
+
+          <button class="btn btn-sm" onclick="searchProduct()">Search</button>
+        </div>
+      </div>
+
+      <!-- RESULTS -->
+      <div id="results-container"></div>
+
+      <!-- BACK -->
+      <div class="text-center" style="margin-top: 20px">
+        <button class="btn btn-sm" onclick="location.href = 'adminrole.html'">
+          Back
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const resultsContainer = document.getElementById("results-container");
+
+      function searchProduct() {
+        const type = document.getElementById("searchTypeSelect").value;
+        const keyword = document.getElementById("searchInput").value.trim();
+
+        if (!keyword) {
+          alert("Enter keyword");
+          return;
+        }
+
+        resultsContainer.innerHTML =
+          '<p style="color:#cfcfcf; text-align:center;">Searching...</p>';
+        fetch(
+          `../admin/process_files/process_search_products.php?type=${type}&keyword=${encodeURIComponent(keyword)}`,
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("FULL DATA:", data);
+            console.log("PRODUCTS:", data.products);
+            console.log("IS ARRAY:", Array.isArray(data.products));
+            console.log("LENGTH:", data.products?.length);
+
+            resultsContainer.innerHTML = "";
+
+            if (
+              !data.success ||
+              !Array.isArray(data.products) ||
+              data.products.length === 0
+            ) {
+              resultsContainer.innerHTML =
+                '<p style="color:#cfcfcf; text-align:center;">No products found.</p>';
+              return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            data.products.forEach((product) => {
+              const card = document.createElement("div");
+
+              card.className = "themed-card";
+              card.style.marginBottom = "15px";
+
+              card.innerHTML = `
+        <h5 style="color:#ffb6cf;">${product.product_name}</h5>
+        <b style="color:#cfcfcf;">ID:</b> ${product.product_id}<br>
+        <b style="color:#cfcfcf;">Category:</b> ${product.category ?? "—"}<br>
+        <b style="color:#cfcfcf;">Seller:</b> ${product.seller_id ?? "—"}<br>
+        <b style="color:#cfcfcf;">Price:</b> ${product.price}<br>
+        <b style="color:#cfcfcf;">Stock:</b> ${product.stock_quantity}
+      `;
+
+              fragment.appendChild(card);
+            });
+
+            resultsContainer.appendChild(fragment);
+          })
+          .catch((err) => {
+            console.error(err);
+
+            resultsContainer.innerHTML =
+              '<p style="color:red; text-align:center;">Search failed.</p>';
+          });
+      }
+    </script>
+  </body>
+</html>

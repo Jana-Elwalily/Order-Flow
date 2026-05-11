@@ -66,16 +66,40 @@ function updateProductStock($product_id, $newQuantity, $conn = null) {
     }
 }
 
-function searchProducts($keyword) {
+function searchProducts($search_type, $keyword) {
     $conn = getDBConnection();
+
+    $search_type = mysqli_real_escape_string($conn, $search_type);
     $keyword = mysqli_real_escape_string($conn, $keyword);
 
-    $query = "SELECT * FROM product
-              WHERE product_name LIKE '%$keyword%'
-              OR description LIKE '%$keyword%'
-              OR category = '$keyword'";
+    switch ($search_type) {
+
+        case 'product_id':
+            $query = "SELECT * FROM product
+                      WHERE product_id LIKE '%$keyword%'";
+            break;
+
+        case 'product_name':
+            $query = "SELECT * FROM product
+                      WHERE product_name LIKE '%$keyword%'";
+            break;
+
+        case 'category':
+            $query = "SELECT * FROM product
+                      WHERE category LIKE '%$keyword%'";
+            break;
+
+        case 'seller_id':
+            $query = "SELECT * FROM product
+                      WHERE seller_id LIKE '%$keyword%'";
+            break;
+
+        default:
+            return [];
+    }
 
     $result = mysqli_query($conn, $query);
+
     $products = [];
 
     while ($row = mysqli_fetch_assoc($result)) {
@@ -83,6 +107,7 @@ function searchProducts($keyword) {
     }
 
     closeDBConnection($conn);
+
     return $products;
 }
 
