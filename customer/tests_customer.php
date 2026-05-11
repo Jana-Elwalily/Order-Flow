@@ -14,7 +14,7 @@ function assert_test($condition, $test_name, $expected, $actual) {
         echo "✓ PASS: $test_name\n";
         $tests_passed++;
     } else {
-        echo "✗ FAIL: $test_name\n";
+        echo "FAIL: $test_name\n";
         echo "  Expected: " . json_encode($expected) . "\n";
         echo "  Actual: " . json_encode($actual) . "\n";
         $tests_failed++;
@@ -196,8 +196,6 @@ echo "\n--- TEST SUMMARY ---\n";
 echo "Total tests run: $tests_run\n";
 echo "Tests passed: $tests_passed\n";
 echo "Tests failed: $tests_failed\n";
-echo "Success rate: " . round(($tests_passed / $tests_run) * 100, 2) . "%\n";
-
 if ($tests_failed === 0) {
     echo "\n ALL TESTS PASSED\n";
 } else {
