@@ -55,7 +55,7 @@
 
         <div class="mb-3">
             <label style="color:#cfcfcf;">Phone Number</label>
-            <input type="text" id="phone" class="form-control" placeholder="Phone">
+            <input type="text" id="phone" class="form-control" placeholder="Phone" pattern="[0-9]+" inputmode="numeric">
         </div>
 
         <div class="mb-3">
@@ -110,7 +110,18 @@ async function register() {
         showMsg('Password must be at least 6 characters.', false);
         return;
     }
+        // Phone validation (digits only)
+    if (!/^[0-9]+$/.test(phone)) {
+        showMsg('Phone number must contain digits only.', false);
+        return;
+    }
 
+    // Email validation 
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+        showMsg('Invalid email format.', false);
+        return;
+}
     const fd = new FormData();
     fd.append('username',         username);
     fd.append('password',         password);
