@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+  <head>
+    <title>OrderFlow - System Reports</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- NAVBAR -->
+    <nav class="app-navbar">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span class="brand-logo">OrderFlow Admin</span>
+      </div>
+    </nav>
+
+    <div class="container dashboard-container">
+      <!-- HEADER -->
+      <div class="themed-card text-center" style="margin-bottom: 30px">
+        <h2 style="color: #d91fae">System Reports</h2>
+        <p style="color: #cfcfcf">Analytics and performance overview</p>
+      </div>
+
+      <!-- SALES -->
+      <div class="themed-card" style="margin-bottom: 20px">
+        <h5 style="color: #ffb6cf">Sales Reports</h5>
+
+        <button
+          class="btn btn-sm"
+          onclick="fetchReport('sales_previous_month')"
+        >
+          Previous Month Sales
+        </button>
+
+        <hr style="border-color: rgba(255, 255, 255, 0.1)" />
+
+        <input
+          type="date"
+          id="salesDate"
+          class="form-control"
+          style="margin-bottom: 10px"
+        />
+
+        <button class="btn btn-sm" onclick="fetchSalesByDay()">
+          Daily Sales
+        </button>
+
+        <div id="sales-result" style="margin-top: 10px; color: #cfcfcf"></div>
+      </div>
+
+      <!-- RANKINGS -->
+      <div class="themed-card" style="margin-bottom: 20px">
+        <h5 style="color: #ffb6cf">Rankings</h5>
+
+        <button class="btn btn-sm" onclick="fetchTableReport('top_customers')">
+          Top Customers
+        </button>
+
+        <button class="btn btn-sm" onclick="fetchTableReport('top_products')">
+          Top Products
+        </button>
+
+        <div id="table-result" style="margin-top: 15px"></div>
+      </div>
+
+      <!-- PRODUCT STATS -->
+      <div class="themed-card" style="margin-bottom: 20px">
+        <h5 style="color: #ffb6cf">Product Statistics</h5>
+
+        <input
+          type="text"
+          id="productId"
+          class="form-control"
+          placeholder="Enter Product ID"
+        />
+
+        <button
+          class="btn btn-sm"
+          style="margin-top: 10px"
+          onclick="fetchProductStats()"
+        >
+          Check Orders
+        </button>
+
+        <div id="product-result" style="margin-top: 10px; color: #cfcfcf"></div>
+      </div>
+
+      <!-- BACK -->
+      <div class="text-center">
+        <button class="btn btn-sm" onclick="location.href = 'adminrole.html'">
+          Back
+        </button>
+      </div>
+    </div>
+
+    <script>
+      // SALES TOTAL
+      function fetchReport(type) {
+        fetch(`../admin/process_files/process_reports.php?report_type=${type}`)
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("sales-result").innerHTML = data.error
+              ? `<span style="color:red;">${data.error}</span>`
+              : `Total Sales: $${data.total_sales}`;
+          });
+      }
+
+      // SALES BY DAY
+      function fetchSalesByDay() {
+        const date = document.getElementById("salesDate").value;
+        if (!date) return alert("Select date");
+
+        fetch(
+          `../admin/process_files/process_reports.php?report_type=sales_by_date&date=${date}`,
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("sales-result").innerHTML = data.error
+              ? `<span style="color:red;">${data.error}</span>`
+              : `Sales on ${date}: $${data.total_sales}`;
+          });
+      }
+
+      // TABLE REPORTS
+      function fetchTableReport(type) {
+        fetch(`../admin/process_files/process_reports.php?report_type=${type}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.error) {
+              document.getElementById("table-result").innerHTML =
+                `<span style="color:red;">${data.error}</span>`;
+              return;
+            }
+
+            let html = `<div class="themed-card">`;
+            if (type === "top_customers") {
+              html += `<h6 style="color:#ff80ab;">Top Customers</h6>`;
+
+              data.forEach((c) => {
+                html += `
+            <div style="color:#cfcfcf; margin-bottom:8px;">
+              ${c.first_name} ${c.last_name}  (Total spendings : ${c.total_spent})
+            </div>
+          `;
+              });
+            } else {
+              html += `<h6 style="color:#ff80ab;">Top Products</h6>`;
+
+              data.forEach((p) => {
+                html += `
+      <div style="color:#cfcfcf; margin-bottom:8px;">
+      ${p.product_name}   (Number of sales : ${p.total_sold})
+      </div>
+          `;
+              });
+            }
+
+            html += `</div>`;
+            document.getElementById("table-result").innerHTML = html;
+          });
+      }
+
+      function fetchProductStats() {
+        const id = document.getElementById("productId").value.trim();
+        if (!id) return alert("Enter product ID");
+
+        fetch(
+          `../admin/process_files/process_reports.php?report_type=product_reorders&product_id=${id}`,
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            document.getElementById("product-result").innerHTML = data.error
+              ? `<span style="color:red;">${data.error}</span>`
+              : `This product has been ordered ${data.times_reordered} time(s).`;
+          })
+          .catch(() => {
+            document.getElementById("product-result").innerHTML =
+              `<span style="color:red;">Connection error</span>`;
+          });
+      }
+    </script>
+  </body>
+</html>

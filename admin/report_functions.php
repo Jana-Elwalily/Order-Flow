@@ -72,7 +72,7 @@ function getProductReorderCount($product_id) {
     $product_id = mysqli_real_escape_string($conn, $product_id);
     
     $query = "SELECT COUNT(*) as times_reordered
-              FROM replenishment_order
+              FROM order_item
               WHERE product_id = '$product_id'";
     
     $result = mysqli_query($conn, $query);

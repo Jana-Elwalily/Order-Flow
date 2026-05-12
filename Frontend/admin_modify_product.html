@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+    <title>OrderFlow - Modify Product</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- NAVBAR -->
+    <nav class="app-navbar">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span class="brand-logo">OrderFlow Admin</span>
+      </div>
+    </nav>
+
+    <div class="container dashboard-container">
+      <!-- HEADER -->
+      <div class="themed-card text-center" style="margin-bottom: 30px">
+        <h2 style="color: #d91fae">Modify Product</h2>
+        <p style="color: #cfcfcf">Search and update product details</p>
+      </div>
+
+      <div id="message-container"></div>
+
+      <!-- SEARCH -->
+      <div class="themed-card" style="margin-bottom: 20px">
+        <h5 style="color: #ffb6cf">Search Product</h5>
+
+        <div class="d-flex gap-2 mt-2">
+          <input
+            type="text"
+            id="search_product_id"
+            class="form-control"
+            placeholder="Enter Product ID"
+          />
+          <button class="btn btn-sm" onclick="searchProduct()">Search</button>
+        </div>
+      </div>
+
+      <!-- FORM -->
+      <div class="themed-card">
+        <form id="ModifyProductForm">
+          <input type="hidden" id="product_id" />
+
+          <div class="mb-3">
+            <label style="color: #cfcfcf">Product Name</label>
+            <input
+              type="text"
+              id="product_name"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label style="color: #cfcfcf">Seller</label>
+            <select id="seller_id" class="form-control"></select>
+          </div>
+
+          <div class="mb-3">
+            <label style="color: #cfcfcf">Price</label>
+            <input type="number" id="price" class="form-control" step="0.01" />
+          </div>
+
+          <div class="mb-3">
+            <label style="color: #cfcfcf">Stock</label>
+            <input type="number" id="stock" class="form-control" />
+          </div>
+
+          <button type="submit" class="btn btn-sm w-100">Save Changes</button>
+        </form>
+      </div>
+
+      <!-- BACK -->
+      <div class="text-center" style="margin-top: 20px">
+        <button class="btn btn-sm" onclick="location.href = 'adminrole.html'">
+          Back
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const modifyForm = document.getElementById("ModifyProductForm");
+      const messageContainer = document.getElementById("message-container");
+      const sellerSelect = document.getElementById("seller_id");
+
+      /* LOAD SELLERS */
+      function loadSellers() {
+        fetch("../admin/process_files/process_get_sellers.php")
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              sellerSelect.innerHTML =
+                '<option value="">Select Seller</option>';
+              data.sellers.forEach((s) => {
+                const option = document.createElement("option");
+                option.value = s.seller_id;
+                option.textContent = s.name;
+                sellerSelect.appendChild(option);
+              });
+            }
+          });
+      }
+
+      loadSellers();
+
+      /* SEARCH */
+      function searchProduct() {
+        const id = document.getElementById("search_product_id").value;
+
+        fetch(`../admin/process_files/process_get_product.php?product_id=${id}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.success) {
+              messageContainer.innerHTML = `<p style="color:red;">${data.error}</p>`;
+              return;
+            }
+
+            document.getElementById("product_id").value =
+              data.product.product_id;
+            document.getElementById("product_name").value =
+              data.product.product_name;
+            document.getElementById("price").value = data.product.price;
+            document.getElementById("stock").value =
+              data.product.stock_quantity;
+            sellerSelect.value = data.product.seller_id;
+
+            messageContainer.innerHTML =
+              '<p style="color:#00d4ff; text-align:center;">Product loaded</p>';
+          });
+      }
+
+      /* UPDATE */
+      modifyForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append(
+          "product_id",
+          document.getElementById("product_id").value,
+        );
+        formData.append(
+          "product_name",
+          document.getElementById("product_name").value,
+        );
+        formData.append("seller_id", sellerSelect.value);
+        formData.append("price", document.getElementById("price").value);
+        formData.append("stock", document.getElementById("stock").value);
+
+        fetch("../admin/process_files/process_update_product.php", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            messageContainer.innerHTML = data.success
+              ? '<p style="color:lightgreen;">Updated successfully</p>'
+              : `<p style="color:red;">${data.error}</p>`;
+          });
+      });
+    </script>
+  </body>
+</html>
