@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+  <head>
+    <title>OrderFlow - Confirm Orders</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+      .order-card {
+        background: rgba(34, 34, 43, 0.65);
+        backdrop-filter: blur(14px);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid rgba(106, 90, 249, 0.2);
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+        margin-bottom: 15px;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .order-details {
+        color: #cfcfcf;
+      }
+
+      .order-details b {
+        color: #ffb6cf;
+      }
+
+      /* SMALL button consistent with admin system */
+      .confirm-btn {
+        background: var(--g1);
+        border: none;
+        color: white;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .confirm-btn:hover {
+        transform: scale(1.05);
+        filter: brightness(1.2);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- NAVBAR (same as adminrole) -->
+    <nav class="app-navbar">
+      <div class="container d-flex justify-content-between align-items-center">
+        <span class="brand-logo">OrderFlow Admin</span>
+      </div>
+    </nav>
+
+    <div class="container dashboard-container">
+      <!-- HEADER (same system) -->
+      <div class="themed-card text-center" style="margin-bottom: 30px">
+        <h2 style="color: #d91fae">Confirm Replenishment Orders</h2>
+        <p style="color: #ff80ab">Approve warehouse stock arrivals</p>
+      </div>
+
+      <div id="message-container"></div>
+
+      <div id="orders-list">
+        <p style="color: #cfcfcf; text-align: center">
+          Checking for pending orders...
+        </p>
+      </div>
+
+      <!-- BACK BUTTON (smaller style like admin system buttons) -->
+      <div class="text-center" style="margin-top: 20px">
+        <button
+          class="btn"
+          style="max-width: 200px"
+          onclick="window.location.href = 'adminrole.html'"
+        >
+          Back to Dashboard
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const ordersList = document.getElementById("orders-list");
+      const messageContainer = document.getElementById("message-container");
+
+      function loadOrders() {
+        fetch("../admin/process_files/process_get_orders.php")
+          .then((res) => res.json())
+          .then((data) => {
+            if (!data.success) {
+              ordersList.innerHTML =
+                '<p style="color:#cfcfcf; text-align:center;">Error loading orders.</p>';
+              return;
+            }
+
+            ordersList.innerHTML = "";
+
+            if (data.orders.length === 0) {
+              ordersList.innerHTML =
+                '<p style="color:#ff80ab; text-align:center;">No pending orders.</p>';
+              return;
+            }
+
+            data.orders.forEach((order) => {
+              const card = document.createElement("div");
+              card.className = "order-card";
+
+              card.innerHTML = `
+    <div class="order-details">
+        <b>Product:</b> ${order.product_name}<br>
+        <b>Seller:</b> ${order.seller_name}<br>
+        <b>Quantity:</b> ${order.quantity} units<br>
+        <b>Date:</b> ${order.order_date}
+    </div>
+
+    <button class="confirm-btn"
+        onclick="confirmOrder(${order.reorder_id})">
+        Confirm
+    </button>
+`;
+
+              ordersList.appendChild(card);
+            });
+          })
+          .catch((err) => {
+            console.error(err);
+            ordersList.innerHTML =
+              '<p style="color:#cfcfcf; text-align:center;">Connection error.</p>';
+          });
+      }
+
+      function confirmOrder(reorderId) {
+        const formData = new FormData();
+        formData.append("reorder_id", reorderId);
+
+        fetch("../admin/process_files/process_confirm_order.php", {
+          method: "POST",
+          body: formData,
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              messageContainer.innerHTML =
+                '<p style="color:#00ff99; text-align:center;">Order confirmed!</p>';
+              loadOrders();
+            } else {
+              messageContainer.innerHTML = `<p style="color:#ff4d4d; text-align:center;">${data.error}</p>`;
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            messageContainer.innerHTML =
+              '<p style="color:#ff4d4d; text-align:center;">Network error.</p>';
+          });
+      }
+
+      loadOrders();
+    </script>
+  </body>
+</html>

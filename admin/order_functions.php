@@ -2,12 +2,18 @@
 require_once 'db_connection.php';
 function getPendingOrders() {
     $conn = getDBConnection();
-    $query = "SELECT ro.*, b.product_name, p.name as seller_name 
-              FROM Replenishment_Order ro 
-              JOIN product b ON ro.product_id = b.product_id
-              JOIN Seller p ON ro.seller_id = p.seller_id 
-              WHERE ro.status = 'Pending' 
-              ORDER BY ro.order_date DESC";
+   $query = "SELECT 
+            ro.reorder_id,
+            ro.order_date,
+            ro.quantity,
+            ro.status,
+            b.product_name AS product_name,
+            s.name AS seller_name
+          FROM Replenishment_Order ro
+          JOIN Product b ON ro.product_id = b.product_id
+          JOIN Seller s ON ro.seller_id = s.seller_id
+          WHERE ro.status = 'Pending'
+          ORDER BY ro.order_date DESC";
     
     $result = mysqli_query($conn, $query);
     $orders = [];
