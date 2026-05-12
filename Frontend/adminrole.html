@@ -12,11 +12,26 @@
 
   <body>
     <!-- NAVBAR (same style system as add product) -->
+    <!-- NAVBAR -->
     <nav class="app-navbar">
       <div class="container d-flex justify-content-between align-items-center">
         <span class="brand-logo">OrderFlow Admin</span>
 
-        
+        <div>
+          <button
+            onclick="location.href = 'login.html'"
+            style="
+              background: none;
+              border: none;
+              color: #d3b0ee;
+              font-weight: bold;
+              cursor: pointer;
+            "
+          >
+            Logout
+          </button>
+        </div>
+      </div>
     </nav>
 
     <div class="container dashboard-container">
@@ -25,12 +40,12 @@
         <h2 style="color: #d91fae">Admin Dashboard</h2>
         <p style="color: #cfcfcf">Manage your system efficiently</p>
       </div>
-  
+
       <!-- MENU GRID -->
       <div class="row g-4">
         <div class="col-md-6">
           <div class="themed-card text-center h-100">
-            <h5 style="color:#ffb6cf">Add Product</h5>
+            <h5 style="color: #ffb6cf">Add Product</h5>
             <p style="color: #ff80ab">Insert new items into the system</p>
             <button
               class="btn w-100"
@@ -43,7 +58,7 @@
 
         <div class="col-md-6">
           <div class="themed-card text-center h-100">
-             <h5 style="color:#ffb6cf">Modify Product</h5>
+            <h5 style="color: #ffb6cf">Modify Product</h5>
             <p style="color: #ff80ab">Update existing products</p>
             <button
               class="btn w-100"
@@ -56,7 +71,7 @@
 
         <div class="col-md-6">
           <div class="themed-card text-center h-100">
-            <h5 style="color:#ffb6cf">Confirm Orders</h5>
+            <h5 style="color: #ffb6cf">Confirm Orders</h5>
             <p style="color: #ff80ab">Process customer orders</p>
             <button
               class="btn w-100"
@@ -67,9 +82,9 @@
           </div>
         </div>
 
-      <div class="col-md-6">
+        <div class="col-md-6">
           <div class="themed-card text-center h-100">
-             <h5 style="color:#ffb6cf">Search </h5>
+            <h5 style="color: #ffb6cf">Search</h5>
             <p style="color: #ff80ab">Search for a product</p>
             <button
               class="btn w-100"
@@ -82,7 +97,7 @@
 
         <div class="col-md-6">
           <div class="themed-card text-center h-100">
-            <h5 style="color:#ffb6cf">Reports</h5>
+            <h5 style="color: #ffb6cf">Reports</h5>
             <p style="color: #ff80ab">View system analytics</p>
             <button
               class="btn w-100"

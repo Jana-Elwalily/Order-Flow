@@ -8,7 +8,7 @@ if (!isAdminLoggedIn()) {
     exit();
 }
 
-$conn = mysqli_connect('localhost', 'root', '', 'Book_Store_Management');
+$conn = mysqli_connect('localhost', 'root', '', 'order_flow');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $reorder_id = (int)$_POST['reorder_id'];
